@@ -1,4 +1,4 @@
-# 🛍️ E-Commerce sur Kubernetes — DevOps & GitOps
+# E-Commerce sur Kubernetes — DevOps & GitOps
 
 > **Projet M2 — Déployer une application complète sur K8S-t3**
 > Déploiement d'une application e-commerce (React + Node.js/Express) sur Kubernetes,

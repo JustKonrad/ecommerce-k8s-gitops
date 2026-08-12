@@ -44,10 +44,8 @@ test:backend:
     entrypoint: [""]
   before_script:
     - mkdir -p /kaniko/.docker
-    - |
-      AUTH=$(printf "%s:%s" "$GHCR_USER" "$GHCR_TOKEN" | base64 | tr -d '\n')
-      echo "{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}" > /kaniko/.docker/config.json
-
+    - echo "{\"auths\":{\"ghcr.io\":{\"username\":\"$GHCR_USER\",\"password\":\"$GHCR_TOKEN\"}}}" > /kaniko/.docker/config.json
+    
 build:backend:
   extends: .kaniko
   script:

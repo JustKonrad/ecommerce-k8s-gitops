@@ -153,7 +153,7 @@ kubectl apply -k k8s/
 kubectl get pods,svc,ingress -n ecommerce
 ```
 
-R©sultat : 2 pods `backend` + 2 pods `frontend` en `Running`, deux Services et un Ingress `ecommerce.local`.
+Rï¿½sultat : 2 pods `backend` + 2 pods `frontend` en `Running`, deux Services et un Ingress `ecommerce.local`.
 
 ![Pods, Services et Ingress du namespace ecommerce](screenshots/01-kubectl-pods.png)
 

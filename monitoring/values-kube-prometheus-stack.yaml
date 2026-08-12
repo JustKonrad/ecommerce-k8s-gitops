@@ -1,0 +1,34 @@
+# Prometheus (= "M" Metrics) + Grafana (= "G")
+# Allégé pour Minikube : rétention courte, ressources modestes.
+grafana:
+  adminPassword: admin           # démo uniquement
+  defaultDashboardsTimezone: browser
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
+    - name: Tempo
+      type: tempo
+      url: http://tempo.monitoring.svc.cluster.local:3100
+      access: proxy
+
+prometheus:
+  prometheusSpec:
+    retention: 3d
+    # Découvre TOUS les ServiceMonitor/PodMonitor, pas seulement ceux du release
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+      limits:   { cpu: 500m, memory: 800Mi }
+
+# On coupe des composants lourds/inutiles sur Minikube
+alertmanager:
+  enabled: true
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false

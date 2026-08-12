@@ -1,0 +1,68 @@
+# ============================================================================
+#  Pipeline CI/CD - E-Commerce sur Kubernetes
+#  Registry cible : GitHub Container Registry (ghcr.io)
+#
+#  Variables CI/CD à définir (Settings > CI/CD > Variables) :
+#    GHCR_USER   = justkonrad            (ton user GitHub, en minuscules)
+#    GHCR_TOKEN  = <PAT GitHub>          (scope: write:packages) -> Masked
+#
+#  NOTE : le repo étant sur GitHub, ce pipeline s'exécute via un projet
+#  GitLab miroir (voir README, section "Faire tourner la CI").
+# ============================================================================
+
+stages:
+  - test
+  - build
+
+variables:
+  BACKEND_IMAGE: "ghcr.io/justkonrad/ecommerce-backend"
+  FRONTEND_IMAGE: "ghcr.io/justkonrad/ecommerce-frontend"
+
+# ---------------------------------------------------------------------------
+# 1) Tests unitaires du backend (Jest + Supertest)
+# ---------------------------------------------------------------------------
+test:backend:
+  stage: test
+  image: node:18-alpine
+  script:
+    - cd backend
+    - npm ci
+    - npm test
+  artifacts:
+    when: always
+    paths:
+      - backend/coverage/
+    expire_in: 1 week
+
+# ---------------------------------------------------------------------------
+# Template Kaniko (build + push d'une image vers ghcr.io)
+# ---------------------------------------------------------------------------
+.kaniko:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - |
+      AUTH=$(printf "%s:%s" "$GHCR_USER" "$GHCR_TOKEN" | base64 | tr -d '\n')
+      echo "{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}" > /kaniko/.docker/config.json
+
+build:backend:
+  extends: .kaniko
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend"
+      --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+      --destination "${BACKEND_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      --destination "${BACKEND_IMAGE}:latest"
+
+build:frontend:
+  extends: .kaniko
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/frontend"
+      --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
+      --build-arg REACT_APP_API_URL=http://ecommerce.local
+      --destination "${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      --destination "${FRONTEND_IMAGE}:latest"

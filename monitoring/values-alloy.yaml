@@ -1,0 +1,43 @@
+# Alloy (= "A") : agent de télémétrie. Ici il collecte les LOGS de tous
+# les pods et les pousse vers Loki.
+alloy:
+  configMap:
+    content: |-
+      // Découverte de tous les pods du cluster
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // On enrichit les logs avec des labels utiles
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label  = "app"
+        }
+      }
+
+      // Lecture des logs des pods
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.write.default.receiver]
+      }
+
+      // Envoi vers Loki
+      loki.write "default" {
+        endpoint {
+          url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }

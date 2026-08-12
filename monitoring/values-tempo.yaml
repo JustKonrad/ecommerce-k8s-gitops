@@ -1,0 +1,5 @@
+# Tempo (= "T" Traces) single binary. Prêt à recevoir des traces OTLP.
+# L'app n'est pas encore instrumentée OpenTelemetry : composant déployé
+# et fonctionnel, traces à ajouter en amélioration.
+tempo:
+  retention: 24h

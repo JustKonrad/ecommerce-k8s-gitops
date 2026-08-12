@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecommerce
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # >>> Remplace par ton URL de repo GitHub <<<
+    repoURL: https://github.com/JustKonrad/ecommerce-k8s-gitops.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ecommerce
+  syncPolicy:
+    automated:
+      prune: true       # supprime les ressources retirées de Git
+      selfHeal: true    # re-synchronise si drift manuel dans le cluster
+    syncOptions:
+      - CreateNamespace=true
